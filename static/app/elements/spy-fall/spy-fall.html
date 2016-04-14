@@ -1,0 +1,89 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+
+<dom-module id="spy-fall">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      span {
+        @apply(--paper-font-body1);
+      }
+    </style>
+
+
+  </template>
+
+  <script>
+    (function () {
+      'use strict';
+
+      Polymer({
+        is: 'spy-fall',
+
+        properties: {
+          ws: {
+            type: Object,
+            notify: true
+          },
+          data: {
+            type: Object,
+            notify: true
+          }
+        },
+
+        ready: function () {
+          var r = new XMLHttpRequest();
+          r.withCredentials = true;
+          r.open("GET", "http://localhost:3032/register", true);
+          r.onreadystatechange = function() {
+            if (r.readyState != 4) {
+              return;
+            }
+            if (r.status != 204) {
+              console.error("Error registering:", r.readyState, r.status);
+              return;
+            }
+            this._websocks();
+          }.bind(this);
+          r.send();
+        },
+        _websocks: function () {
+          this.ws = new WebSocket("ws://localhost:3032/ws");
+          this.ws.isOpen = false;
+
+          this.ws.onopen = function () {
+            console.log("OPEN");
+            this.ws.isOpen = true;
+          }.bind(this);
+
+          this.ws.onmessage = function (msg) {
+            var json = JSON.parse(msg.data);
+            this.data = json;
+            switch (json.type) {
+              case "page":
+                page(json.page);
+                break;
+              case "game":
+                page('/game/' + json.game.gameId);
+                break;
+              default:
+                console.error("Unknown type", json.type);
+            }
+          }.bind(this);
+
+          this.ws.onclose = function (msg) {
+            console.log("CLOSED", msg);
+            this.isOpen = false;
+          }.bind(this);
+
+          this.ws.onerror = function (msg) {
+            console.log("ERROR", msg);
+          }.bind(this);
+        }
+      });
+    })();
+  </script>
+</dom-module>
