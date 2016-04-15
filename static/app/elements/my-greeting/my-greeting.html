@@ -18,16 +18,31 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         display: block;
       }
 
-      span,
-      input {
-        @apply(--paper-font-body2);
+      #choices {
+        display: flex;
+        justify-content: space-between;
       }
     </style>
 
-    <h1 class="page-title" tabindex="-1">{{greeting}}</h1>
-    <label for="greeting-input">Update text to change the greeting.</label>
-    <!-- Listens for "input" event and sets greeting to <input>.value -->
-    <input id="greeting-input" value="{{greeting::input}}">
+    <div id="choices">
+      <a href$="{{base}}new">
+        <paper-button raised>
+          <iron-icon icon="add-circle"></iron-icon>
+          New Game
+        </paper-button>
+      </a>
+      <a href$="{{base}}join">
+        <paper-button raised>
+          <iron-icon icon="editor:merge-type"></iron-icon>
+          Join Game
+        </paper-button>
+      </a>
+      <a href$="{{base}}game/{{data.game.gameId}}" hidden="{{hideRejoin}}">
+        <paper-button raised>
+          Rejoin Game
+        </paper-button>
+      </a>
+    </div>
 
     <content></content>
   </template>
@@ -40,10 +55,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         is: 'my-greeting',
 
         properties: {
-          greeting: {
-            type: String,
-            value: 'Welcome!',
-            notify: true
+          base: {
+            type: String
+          },
+          data: {
+            type: Object,
+            observer: '_dataChanged'
+          },
+          hideRejoin: {
+            type: Boolean,
+            value: true
+          }
+        },
+        _dataChanged: function() {
+          if (this.data && this.data.game && this.data.game.gameId) {
+            this.hideRejoin = false;
+          } else {
+            this.hideRejoin = true;
           }
         }
       });

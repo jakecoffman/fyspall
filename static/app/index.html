@@ -65,7 +65,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <!-- endbuild -->
 
 <template is="dom-bind" id="app">
-  <spy-fall ws="{{ws}}"></spy-fall>
+  <spy-fall ws="{{ws}}" data="{{data}}"></spy-fall>
 
   <paper-drawer-panel id="paperDrawerPanel">
     <!-- Drawer Scroll Header Panel -->
@@ -123,20 +123,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <iron-pages attr-for-selected="data-route" selected="{{route}}">
             <section data-route="home" tabindex="-1">
               <paper-material elevation="1">
-                <!--<my-greeting greeting="{{greeting}}">-->
-                  <!--<p class="subhead">You now have:</p>-->
-                  <!--<my-list items="{{greeting}}"></my-list>-->
-                <!--</my-greeting>-->
-
                 <h2 class="page-title">Welcome</h2>
-
-                <paper-button raised>
-                  <a href$="{{baseUrl}}new">New Game</a>
-                </paper-button>
-                <paper-button raised>
-                  <a href$="{{baseUrl}}join">Join Game</a>
-                </paper-button>
-                <paper-button raised disabled>Rejoin Game</paper-button>
+                <my-greeting base="[[baseUrl]]" data="[[data]]"></my-greeting>
               </paper-material>
             </section>
 
@@ -157,7 +145,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <section data-route="game" tabindex="-1">
               <paper-material elevation="-1">
                 <h1 class="page-title" tabindex="-1">Game: {{params.name}}</h1>
-                <my-game ws="{{ws}}" name="{{name}}" gameId="{{gameId}}" data="{{data}}"></my-game>
+                <my-game ws="{{ws}}" name="{{name}}" gameId="{{gameId}}" data="[[data]]"></my-game>
               </paper-material>
             </section>
 

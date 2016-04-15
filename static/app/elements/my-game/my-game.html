@@ -10,6 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
 
 <dom-module id="my-game">
   <template>
@@ -18,18 +19,41 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         display: block;
       }
 
-      span,
-      input {
-        @apply(--paper-font-body2);
+      #actions {
+        display: flex;
+        justify-content: space-between;
       }
     </style>
 
-    <pre>{{data}}</pre>
+    <h2>Players:</h2>
     <ul>
-      <template is="dom-repeat" items="{{data.players}}">
-        <li><span>{{item}}</span></li>
+      <template is="dom-repeat" items="{{data.game.players}}">
+        <li>
+          <span>{{item.name}}</span>
+        </li>
+      </template>
+      <template is="dom-repeat" items="{{data.game.disconnected}}">
+        <li>
+          <span>{{item.name}}</span> (disconnected)
+        </li>
       </template>
     </ul>
+
+    <div hidden="{{!data.game.started}}">
+
+    </div>
+
+    <div id="actions">
+      <paper-button raised on-tap="leaveGame">
+        Leave Game
+      </paper-button>
+      <paper-button raised on-tap="endGame" hidden="{{!data.game.started}}">
+        End Game
+      </paper-button>
+      <paper-button raised on-tap="startGame" hidden="{{data.game.started}}">
+        Start Game
+      </paper-button>
+    </div>
 
     <content></content>
   </template>
@@ -59,7 +83,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           }
         },
         _wsChanged: function() {
-          console.log("HERE", this.data, this.name, this.gameId, this.ws);
           if (!this.ws || !this.ws.isOpen) {
             return;
           }
@@ -70,7 +93,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           }
         },
         _dataChanged: function(newVal, old) {
-          console.log(newVal);
+          console.log(this.data);
+        },
+        startGame: function() {
+          this.ws.send(JSON.stringify({
+            action: "start"
+          }));
+        },
+        leaveGame: function() {
+          this.data = {};
+          this.ws.send(JSON.stringify({
+            action: 'leave'
+          }));
+        },
+        endGame: function() {
+          this.ws.send(JSON.stringify({
+            action: 'end'
+          }));
         }
       });
     })();

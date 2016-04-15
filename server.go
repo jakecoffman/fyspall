@@ -6,17 +6,19 @@ import (
 	"math/rand"
 	"strconv"
 	"github.com/gorilla/websocket"
-	"sync"
 	"time"
 )
 
-var cookies map[string]*Player
-var games map[string]*Game
+var cookies *Cookies
+var games *Games
 
 func init() {
 	rand.Seed(time.Now().Unix())
-	cookies = map[string]*Player{}
-	games = map[string]*Game{}
+	cookies = NewCookies()
+	games = NewGames()
+
+	cookies.Load()
+	games.Load()
 }
 
 func NewServer() *http.ServeMux {
@@ -40,12 +42,17 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("spyfall")
 	switch {
 	case err == nil:
-		log.Println("Already have cookie:", cookie.Value)
+		if cookies.Get(cookie.Value) != nil {
+			break
+		}
+		log.Println("Database was reset?")
+		cookies.Delete(cookie.Value)
+		fallthrough
 	case err == http.ErrNoCookie:
-		val := strconv.Itoa(rand.Int())
-		log.Println("Setting new cookie", val)
-		cookie = &http.Cookie{Name: "spyfall", Value: val}
-		cookies[val] = nil
+		player := NewPlayer("", nil)
+		log.Println("New", player)
+		cookie = &http.Cookie{Name: "spyfall", Value: player.Id}
+		cookies.Set(player)
 		http.SetCookie(w, cookie)
 	default:
 		log.Println(err)
@@ -64,6 +71,12 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
 		return
 	}
+	player := cookies.Get(cookie.Value)
+	if player == nil {
+		log.Println("Player not created?", player)
+		w.WriteHeader(500)
+		return
+	}
 
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,
@@ -75,34 +88,15 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	player := cookies[cookie.Value]
-	var game *Game
+	player.conn = conn
+	player.Connected = true
 
-	if player != nil {
-		log.Println("Player already exists", player.id)
-		game = FindGameByPlayerLeft(player)
-		if game != nil {
-			log.Println("Player is in game", game.GameId)
-			game.Rejoin(player)
-		}
-	} else {
-		player = NewPlayer("", conn)
-		cookies[cookie.Value] = player
+	game := games.FindGameByPlayerLeft(player)
+	if game != nil {
+		game.Rejoin(player)
 	}
 
 	GameLoop(conn, player, game)
-}
-
-func FindGameByPlayerLeft(player *Player) *Game {
-	for _, game := range games {
-		for _, p := range game.left {
-			if player.id == p.id {
-				p.conn = player.conn
-				return game
-			}
-		}
-	}
-	return nil
 }
 
 func GameLoop(conn *websocket.Conn, player *Player, game *Game) {
@@ -110,7 +104,6 @@ func GameLoop(conn *websocket.Conn, player *Player, game *Game) {
 		// wait for new/join game message
 		msg := map[string]string{}
 		if err := conn.ReadJSON(&msg); err != nil {
-			log.Println(err)
 			if game != nil {
 				game.Disconnect(player)
 			}
@@ -129,10 +122,9 @@ func GameLoop(conn *websocket.Conn, player *Player, game *Game) {
 			if err := conn.WriteJSON(resp); err != nil {
 				log.Println(err)
 			}
-			player := NewPlayer(msg["name"], conn)
+			player.Name = msg["name"]
 			game = NewGame(gameId)
-			games[gameId] = game
-			log.Println(games)
+			games.Set(game)
 			game.Join(player)
 		case msg["action"] == "join":
 			if game != nil {
@@ -140,101 +132,40 @@ func GameLoop(conn *websocket.Conn, player *Player, game *Game) {
 			}
 			gameId := msg["gameId"]
 			player.Name = msg["name"]
-			log.Println(player.Name, "joining", gameId)
-			game = games[gameId]
-			log.Println(games)
+			game = games.Get(gameId)
 			if game == nil {
 				log.Println("Game not found")
 			} else {
 				game.Join(player)
 			}
 		case msg["action"] == "rejoin":
-			game.update()
+			if game == nil {
+				break
+			}
+			game.Rejoin(player)
+		case msg["action"] == "start":
+			if game == nil {
+				break
+			}
+			game.Start()
+		case msg["action"] == "end":
+			if game == nil {
+				break
+			}
+			game.End()
+		case msg["action"] == "leave":
+			if game != nil {
+				game.Leave(player)
+				game = nil
+			}
+			resp := map[string]string{}
+			resp["type"] = "page"
+			resp["page"] = "/"
+			if err := conn.WriteJSON(resp); err != nil {
+				log.Println(err)
+			}
 		default:
 			log.Println("WAT:", msg)
 		}
 	}
-}
-
-func NewGame(gameId string) *Game {
-	return &Game{GameId: gameId, Players: []*Player{}, left: []*Player{}}
-}
-
-func NewPlayer(name string, conn *websocket.Conn) *Player {
-	return &Player{id: rand.Int(), Name: name, conn: conn}
-}
-
-type Player struct {
-	id int
-	Name string `json:"name"`
-	conn *websocket.Conn
-}
-
-type Game struct {
-	sync.RWMutex
-	GameId string `json:"gameId"`
-	Players []*Player `json:"players"`
-	left []*Player // players that disconnected
-}
-
-func (g *Game) Join(player *Player) {
-	g.Lock()
-	g.Players = append(g.Players, player)
-	log.Println(player.id, "joined", g.GameId)
-	g.Unlock()
-	g.update()
-}
-
-func (g *Game) Disconnect(player *Player) {
-	g.Lock()
-	for i, p := range g.Players {
-		if p.id == player.id {
-			g.Players = append(g.Players[:i], g.Players[i+1:]...)
-			break
-		}
-	}
-	g.left = append(g.left, player)
-	log.Println(player.id, "disconnect", g.GameId)
-	g.Unlock()
-	g.update()
-}
-
-func (g *Game) Leave(player *Player) {
-	g.Lock()
-	for i, p := range g.Players {
-		if p.id == player.id {
-			g.Players = append(g.Players[:i], g.Players[i+1:]...)
-			break
-		}
-	}
-	log.Println(player.id, "left", g.GameId)
-	g.Unlock()
-	g.update()
-}
-
-func (g *Game) Rejoin(player *Player) {
-	g.Lock()
-	for i, p := range g.left {
-		if p.id == player.id {
-			g.left = append(g.left[:i], g.left[i+1:]...)
-			break
-		}
-	}
-	g.Players = append(g.Players, player)
-	log.Println(player.id, "rejoined", g.GameId)
-	g.Unlock()
-	g.update()
-}
-
-func (g *Game) update() {
-	g.RLock()
-	msg := map[string]interface{}{}
-	msg["type"] = "game"
-	msg["game"] = g
-	for _, p := range g.Players {
-		if err := p.conn.WriteJSON(msg); err != nil {
-			log.Println(err, g.GameId)
-		}
-	}
-	g.RUnlock()
 }
