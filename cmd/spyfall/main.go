@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 	"log"
-	"github.com/jakecoffman/spyfall"
+	"github.com/jakecoffman/fyspall"
 )
 
 func main() {
