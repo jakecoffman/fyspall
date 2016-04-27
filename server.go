@@ -25,10 +25,17 @@ func NewServer() *http.ServeMux {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", RootHandler)
-	mux.HandleFunc("/register", RegisterHandler)
-	mux.HandleFunc("/ws", WebsocketHandler)
+	mux.HandleFunc("/register", Middleware(RegisterHandler))
+	mux.HandleFunc("/ws", Middleware(WebsocketHandler))
 
 	return mux
+}
+
+func Middleware(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		h(w, r)
+		log.Println(r.URL, r.Method)
+	}
 }
 
 func RootHandler(w http.ResponseWriter, r *http.Request) {
