@@ -17849,7 +17849,7 @@ module.exports = Array.isArray || function (arr) {
           r.send();
         },
         _websocks: function () {
-          this.ws = new WebSocket("ws://localhost:3032/ws");
+          this.ws = new WebSocket("ws://" + location.host + "/ws");
           this.ws.isOpen = false;
 
           this.ws.onopen = function () {
