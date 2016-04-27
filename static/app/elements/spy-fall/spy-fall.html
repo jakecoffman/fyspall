@@ -71,7 +71,7 @@
           r.send();
         },
         _websocks: function () {
-          this.ws = new WebSocket("ws://localhost:3032/ws");
+          this.ws = new WebSocket("wss://jake.mynetgear.com/fyspall/ws");
           this.ws.isOpen = false;
 
           this.ws.onopen = function () {
