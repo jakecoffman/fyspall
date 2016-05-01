@@ -9,26 +9,31 @@ import (
 
 type Game struct {
 	sync.RWMutex
-	Id       string `json:"gameId"`
-	Players  []*Player `json:"players"`
-	Left     []*Player `json:"disconnected"`
-	Started  bool `json:"started"`
-	Location string `json:"location"` // don't send to spy
-	Info     map[string]*PlayerInfo `json:"playerInfo"`
+	Id      string `json:"gameId"`
+	Players map[string]*Player `json:"players"`
+	Left    map[string]*Player `json:"disconnected"`
+	Started bool `json:"started"`
+	First   string `json:"first"`
+	info    map[string]*PlayerInfo
 }
 
 func NewGame(gameId string) *Game {
 	return &Game{
 		Id: gameId,
-		Players: []*Player{},
-		Left: []*Player{},
-		Info: map[string]*PlayerInfo{},
+		Players: map[string]*Player{},
+		Left: map[string]*Player{},
+		info: map[string]*PlayerInfo{},
 	}
 }
 
+// This is private info, sent only to the players individualy
 type PlayerInfo struct {
-	IsSpy bool // only sent to spy
-	Role  string `json:"role"` // don't assign one to spy
+	// only sent to spy
+	IsSpy    bool
+
+	// not sent to spy
+	Location string `json:"location"`
+	Role     string `json:"role"`
 }
 
 func (g *Game) String() string {
@@ -37,7 +42,7 @@ func (g *Game) String() string {
 
 func (g *Game) Join(player *Player) {
 	g.Lock()
-	g.Players = append(g.Players, player)
+	g.Players[player.Id] = player
 	log.Println(player, "joined", g)
 	g.Unlock()
 	g.update()
@@ -45,13 +50,8 @@ func (g *Game) Join(player *Player) {
 
 func (g *Game) Disconnect(player *Player) {
 	g.Lock()
-	for i, p := range g.Players {
-		if p.Id == player.Id {
-			g.Players = append(g.Players[:i], g.Players[i + 1:]...)
-			break
-		}
-	}
-	g.Left = append(g.Left, player)
+	delete(g.Players, player.Id)
+	g.Left[player.Id] = player
 	player.Connected = false
 	g.Unlock()
 	g.update()
@@ -59,30 +59,20 @@ func (g *Game) Disconnect(player *Player) {
 
 func (g *Game) Leave(player *Player) {
 	g.Lock()
-	for i, p := range g.Players {
-		if p.Id == player.Id {
-			g.Players = append(g.Players[:i], g.Players[i + 1:]...)
-			break
-		}
-	}
+	delete(g.Players, player.Id)
 	log.Println(player, "left", g)
 	g.Unlock()
 	g.update()
 }
 
+// Or watch
 func (g *Game) Rejoin(player *Player) {
 	g.Lock()
-	found := false
-	for i, p := range g.Left {
-		if p.Id == player.Id {
-			g.Left = append(g.Left[:i], g.Left[i + 1:]...)
-			found = true
-			break
-		}
-	}
+	player, found := g.Left[player.Id]
 	if found {
+		delete(g.Left, player.Id)
 		log.Println(player, "rejoined", g)
-		g.Players = append(g.Players, player)
+		g.Players[player.Id] = player
 		g.Unlock()
 		g.update()
 	} else {
@@ -95,25 +85,30 @@ func (g *Game) Start() {
 	g.Lock()
 	g.Started = true
 	nLoc := rand.Intn(len(placeData.Locations))
-	g.Location = placeData.Locations[nLoc]
-	roles := placeData.Roles[g.Location]
+	location := placeData.Locations[nLoc]
+	roles := placeData.Roles[location]
 	nRole := rand.Intn(len(roles))
 	nSpy := rand.Intn(len(g.Players) + len(g.Left))
+	nFirst := rand.Intn(len(g.Players) + len(g.Left))
 
-	var i int
-	var p *Player
-	for i, p = range g.Players {
+	i := 0
+	for id, _ := range g.Players {
 		pi := &PlayerInfo{}
+		if i == nFirst {
+			g.First = id
+		}
 		if i == nSpy {
 			pi.IsSpy = true
 		} else {
+			pi.Location = location
 			pi.Role = roles[nRole]
 			nRole += 1
 			if nRole > len(roles) {
 				nRole = 0
 			}
 		}
-		g.Info[p.Id] = pi
+		g.info[id] = pi
+		i += 1
 	}
 	g.Unlock()
 	g.update()
@@ -131,14 +126,15 @@ func (g *Game) update() {
 	games.Save()
 	cookies.Save()
 
-	// TODO: on;y send player data of the player this is
 	g.RLock()
 	msg := map[string]interface{}{}
 	msg["type"] = "game"
 	msg["game"] = g
-	for _, p := range g.Players {
+	msg["info"] = placeData
+	for id, p := range g.Players {
+		msg["you"] = g.info[id]
 		if err := p.conn.WriteJSON(msg); err != nil {
-			log.Println(err, p.Id)
+			log.Println(err, id)
 		}
 	}
 	g.RUnlock()

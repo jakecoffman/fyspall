@@ -11,6 +11,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
 
 <dom-module id="my-game">
   <template>
@@ -25,23 +26,50 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     </style>
 
+    <div hidden="{{!data.game.started}}">
+      <h2>You</h2>
+      <paper-checkbox name="hide" id="hide" on-click="hideSpyness">Hide</paper-checkbox>
+      <div hidden$="{{hide}}">
+        <div hidden="{{!data.you.IsSpy}}">
+          <p>You are the spy!</p>
+          <p>
+            Try to figure out where everyone else is. If you
+            guess it before you are found out, you win!
+          </p>
+        </div>
+        <div hidden="{{data.you.IsSpy}}">
+          <p>Location: <em>{{data.you.location}}</em></p>
+          <p>Role: <em>{{data.you.role}}</em></p>
+          <p>
+            Figure out who the spy is by asking a question to someone else, starting with the
+            player below marked with a <iron-icon icon="star"></iron-icon>. Careful, if the spy
+            figures out where you are based on your questions and answers, you lose!
+          </p>
+        </div>
+      </div>
+    </div>
+
     <h2>Players:</h2>
     <ul>
-      <template is="dom-repeat" items="{{data.game.players}}">
+      <template is="dom-repeat" items="{{_toArray(data.game.players)}}">
         <li>
-          <span>{{item.name}}</span>
+          <span>{{item.value.name}}</span>
+          <iron-icon icon="star" hidden$="{{!isFirst(item.key)}}"></iron-icon>
         </li>
       </template>
-      <template is="dom-repeat" items="{{data.game.disconnected}}">
+      <template is="dom-repeat" items="{{_toArray(data.game.disconnected)}}">
         <li>
-          <span>{{item.name}}</span> (disconnected)
+          <span>{{item.value.name}}</span><iron-icon icon="star" hidden$="{{data.game.first !== item.key}}"></iron-icon> (disconnected)
         </li>
       </template>
     </ul>
 
-    <div hidden="{{!data.game.started}}">
-
-    </div>
+    <h2>Possible Locations</h2>
+    <ul>
+      <template is="dom-repeat" items="{{data.info.Locations}}">
+        <li>{{item}}</li>
+      </template>
+    </ul>
 
     <div id="actions">
       <paper-button raised on-tap="leaveGame">
@@ -80,6 +108,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           ws: {
             type: Object,
             observer: '_wsChanged'
+          },
+          hide: {
+            type: Boolean,
+            value: false
           }
         },
         _wsChanged: function() {
@@ -94,6 +126,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         },
         _dataChanged: function(newVal, old) {
           console.log(this.data);
+        },
+        _toArray: function(obj) {
+          if (obj === undefined || obj === null) {
+            return [];
+          }
+          return Object.keys(obj).map(function(key) {
+            return {
+              key: key,
+              value: obj[key]
+            }
+          })
+        },
+        isFirst: function(playerId) {
+          return this.data.game.first == playerId;
+        },
+        hideSpyness: function() {
+          this.hide = !this.hide;
         },
         startGame: function() {
           this.ws.send(JSON.stringify({

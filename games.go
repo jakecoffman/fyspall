@@ -56,10 +56,12 @@ func (g *Games) Load() error {
 	}
 	// mark all players as "left" since the server restarted
 	for _, game := range g.games {
-		game.Left = append(game.Left, game.Players...)
-		game.Players = []*Player{}
-		for _, player := range game.Left {
-			player.Connected = false
+		for id, p := range game.Players {
+			game.Left[id] = p
+		}
+		game.Players = map[string]*Player{}
+		for _, p := range game.Left {
+			p.Connected = false
 		}
 	}
 	return nil
