@@ -14,7 +14,7 @@ type Game struct {
 	Left    map[string]*Player `json:"disconnected"`
 	Started bool `json:"started"`
 	First   string `json:"first"`
-	info    map[string]*PlayerInfo
+	Info    map[string]*PlayerInfo
 }
 
 func NewGame(gameId string) *Game {
@@ -22,7 +22,7 @@ func NewGame(gameId string) *Game {
 		Id: gameId,
 		Players: map[string]*Player{},
 		Left: map[string]*Player{},
-		info: map[string]*PlayerInfo{},
+		Info: map[string]*PlayerInfo{},
 	}
 }
 
@@ -107,7 +107,7 @@ func (g *Game) Start() {
 				nRole = 0
 			}
 		}
-		g.info[id] = pi
+		g.Info[id] = pi
 		i += 1
 	}
 	g.Unlock()
@@ -129,13 +129,27 @@ func (g *Game) update() {
 	g.RLock()
 	msg := map[string]interface{}{}
 	msg["type"] = "game"
-	msg["game"] = g
+	msg["game"] = GameMessage{
+		Id: g.Id,
+		Players: g.Players,
+		Left: g.Left,
+		Started: g.Started,
+		First: g.First,
+	}
 	msg["info"] = placeData
 	for id, p := range g.Players {
-		msg["you"] = g.info[id]
+		msg["you"] = g.Info[id]
 		if err := p.conn.WriteJSON(msg); err != nil {
 			log.Println(err, id)
 		}
 	}
 	g.RUnlock()
+}
+
+type GameMessage struct {
+	Id      string `json:"gameId"`
+	Players map[string]*Player `json:"players"`
+	Left    map[string]*Player `json:"disconnected"`
+	Started bool `json:"started"`
+	First   string `json:"first"`
 }
