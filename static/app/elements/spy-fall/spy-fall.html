@@ -50,11 +50,15 @@
             value: true
           }
         },
-
         ready: function () {
           var r = new XMLHttpRequest();
           r.withCredentials = true;
-          r.open("GET", "https://jake.mynetgear.com/fyspall/register", true);
+          console.log(location.hostname);
+          if (location.hostname == "localhost") {
+            r.open("GET", "http://localhost:3032/register", true);
+          } else {
+            r.open("GET", "https://jake.mynetgear.com/fyspall/register", true);
+          }
           r.onreadystatechange = function() {
             if (r.readyState != 4) {
               return;
@@ -71,7 +75,11 @@
           r.send();
         },
         _websocks: function () {
-          this.ws = new WebSocket("wss://jake.mynetgear.com/fyspall/ws");
+          if (location.hostname == "localhost") {
+            this.ws = new WebSocket("ws://localhost:3032/ws");
+          } else {
+            this.ws = new WebSocket("wss://jake.mynetgear.com/fyspall/ws");
+          }
           this.ws.isOpen = false;
 
           this.ws.onopen = function () {
