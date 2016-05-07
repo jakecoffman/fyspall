@@ -12,6 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../count-down/count-down.html">
 
 <dom-module id="my-game">
   <template>
@@ -27,6 +28,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </style>
 
     <div hidden="{{!data.game.started}}">
+      <count-down deadline="{{data.game.deadline}}"></count-down>
+
       <h2>You</h2>
       <paper-checkbox name="hide" id="hide" on-click="hideSpyness">Hide</paper-checkbox>
       <div hidden$="{{hide}}">

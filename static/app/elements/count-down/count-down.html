@@ -1,0 +1,84 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
+
+<dom-module id="count-down">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      #time {
+        @apply(--paper-font-body1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32pt;
+      }
+
+    </style>
+    <div id="time">
+      <div hidden$="{{timesUp}}">
+        <span>{{minutes}}</span>:<span>{{seconds}}</span>
+      </div>
+      <div hidden="{{!timesUp}}">
+        Time's up!
+      </div>
+    </div>
+  </template>
+  <script>
+    (function () {
+      'use strict';
+
+      Polymer({
+        is: 'count-down',
+
+        properties: {
+          deadline: {
+            type: String,
+            observer: 'dateChanged'
+          },
+          interval: {
+            type: Object
+          },
+          minutes: {
+            type: Number
+          },
+          seconds: {
+            type: Number
+          },
+          total: {
+            type: Number
+          },
+          timesUp: {
+            type: Boolean,
+            value: false
+          }
+        },
+        dateChanged: function () {
+          this.total = Date.parse(this.deadline) - new Date().getTime();
+          this.seconds = this.pad(Math.floor((this.total / 1000) % 60), 2);
+          this.minutes = this.pad(Math.floor((this.total / 1000 / 60) % 60), 2);
+
+          if (this.total <= 0) {
+            this.timesUp = true;
+            clearInterval(this.interval);
+            return;
+          }
+          this.timesUp = false;
+          if (!this.interval) {
+            this.interval = setInterval(this.dateChanged.bind(this), 500);
+          }
+        },
+        pad: function(num, size) {
+          let s = num + "";
+          while (s.length < size) s = "0" + s;
+          return s;
+        }
+      });
+    })();
+  </script>
+</dom-module>
+

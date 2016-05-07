@@ -5,15 +5,17 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"time"
 )
 
 type Game struct {
 	sync.RWMutex
-	Id      string `json:"gameId"`
-	Players map[string]*Player `json:"players"`
-	Started bool `json:"started"`
-	First   string `json:"first"`
-	Info    map[string]*PlayerInfo `json:"playerInfo"`
+	Id       string `json:"gameId"`
+	Players  map[string]*Player `json:"players"`
+	Started  bool `json:"started"`
+	First    string `json:"first"`
+	Deadline time.Time `json:"deadline"`
+	Info     map[string]*PlayerInfo `json:"playerInfo"`
 }
 
 func NewGame(gameId string) *Game {
@@ -112,6 +114,7 @@ func (g *Game) Start() {
 		g.Info[id] = pi
 		i += 1
 	}
+	g.Deadline = time.Now().Add(8*time.Minute)
 	g.Unlock()
 	g.update()
 }
@@ -124,6 +127,7 @@ func (g *Game) End() {
 	g.Started = false
 	g.Info = map[string]*PlayerInfo{}
 	g.First = ""
+	g.Deadline = time.Time{}
 	g.Unlock()
 	g.update()
 }
@@ -146,6 +150,7 @@ func (g *Game) update() {
 		Players: g.Players,
 		Started: g.Started,
 		First: g.First,
+		Deadline: g.Deadline,
 	}
 	msg["info"] = placeData
 	for id, p := range g.Players {
@@ -155,9 +160,10 @@ func (g *Game) update() {
 }
 
 type GameMessage struct {
-	Id      string `json:"gameId"`
-	Players map[string]*Player `json:"players"`
-	Left    map[string]*Player `json:"disconnected"`
-	Started bool `json:"started"`
-	First   string `json:"first"`
+	Id       string `json:"gameId"`
+	Players  map[string]*Player `json:"players"`
+	Left     map[string]*Player `json:"disconnected"`
+	Started  bool `json:"started"`
+	First    string `json:"first"`
+	Deadline time.Time `json:"deadline"`
 }
