@@ -112,6 +112,8 @@ func (g *Game) End() {
 	}
 	g.Lock()
 	g.Started = false
+	g.Info = map[string]*PlayerInfo{}
+	g.First = ""
 	g.Unlock()
 	g.update()
 }
