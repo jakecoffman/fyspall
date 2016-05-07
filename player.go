@@ -51,3 +51,10 @@ func (p *Player) WriteJSON(msg interface{}) {
 		p.Connected = false
 	}
 }
+
+func (p *Player) Page(page string) {
+	msg := map[string]string{}
+	msg["type"] = "page"
+	msg["page"] = "/"
+	p.WriteJSON(msg)
+}

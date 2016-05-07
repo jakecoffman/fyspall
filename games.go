@@ -63,12 +63,12 @@ func (g *Games) Load() error {
 	return nil
 }
 
-func (g *Games) FindByPlayer(player *Player) *Game {
+func (g *Games) Rejoin(player *Player) *Game {
 	g.RLock()
 	defer g.RUnlock()
 	for _, game := range g.games {
 		if _, ok := game.Players[player.Id]; ok {
-			game.Players[player.Id] = player
+			game.Rejoin(player)
 			return game
 		}
 	}

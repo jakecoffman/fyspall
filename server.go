@@ -101,17 +101,13 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 	player.conn = conn
 	player.Connected = true
 
-	game := games.FindByPlayer(player)
-	if game != nil {
-		game.Rejoin(player)
-	}
-
+	game := games.Rejoin(player)
 	GameLoop(conn, player, game)
 }
 
 func GameLoop(conn *websocket.Conn, player *Player, game *Game) {
 	for {
-		// wait for new/join game message
+		// react to messages from this player
 		msg := map[string]string{}
 		if err := conn.ReadJSON(&msg); err != nil {
 			player.Disconnect()
@@ -123,12 +119,7 @@ func GameLoop(conn *websocket.Conn, player *Player, game *Game) {
 		case msg["action"] == "new":
 			game.Leave(player)
 			gameId := strconv.Itoa(rand.Int())
-			resp := map[string]string{}
-			resp["type"] = "page"
-			resp["page"] = "/game/" + gameId
-			if err := conn.WriteJSON(resp); err != nil {
-				log.Println(err)
-			}
+			player.Page("/game/" + gameId)
 			player.Name = msg["name"]
 			game = NewGame(gameId)
 			games.Set(game)
@@ -148,12 +139,7 @@ func GameLoop(conn *websocket.Conn, player *Player, game *Game) {
 		case msg["action"] == "leave":
 			game.Leave(player)
 			game = nil
-			resp := map[string]string{}
-			resp["type"] = "page"
-			resp["page"] = "/"
-			if err := conn.WriteJSON(resp); err != nil {
-				log.Println(err)
-			}
+			player.Page("/")
 		default:
 			log.Println("WAT:", msg)
 		}

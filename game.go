@@ -67,6 +67,7 @@ func (g *Game) Rejoin(player *Player) {
 	if g == nil {
 		return
 	}
+	g.Players[player.Id] = player
 	g.update()
 }
 
