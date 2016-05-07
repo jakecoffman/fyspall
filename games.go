@@ -54,25 +54,22 @@ func (g *Games) Load() error {
 		log.Println(err)
 		return err
 	}
-	// mark all players as "left" since the server restarted
+	// mark all players as disconnected since the server restarted
 	for _, game := range g.games {
-		for id, p := range game.Players {
-			game.Left[id] = p
-		}
-		game.Players = map[string]*Player{}
-		for _, p := range game.Left {
+		for _, p := range game.Players {
 			p.Connected = false
 		}
 	}
 	return nil
 }
 
-func (g *Games) FindGameByPlayerLeft(player *Player) *Game {
+func (g *Games) FindByPlayer(player *Player) *Game {
+	g.RLock()
+	defer g.RUnlock()
 	for _, game := range g.games {
-		for _, p := range game.Left {
-			if player.Id == p.Id {
-				return game
-			}
+		if _, ok := game.Players[player.Id]; ok {
+			game.Players[player.Id] = player
+			return game
 		}
 	}
 	return nil

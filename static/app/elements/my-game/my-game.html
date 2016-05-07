@@ -54,12 +54,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <template is="dom-repeat" items="{{_toArray(data.game.players)}}">
         <li>
           <span>{{item.value.name}}</span>
+          <span hidden$="{{item.value.connected}}">(Disconnected)</span>
           <iron-icon icon="star" hidden$="{{!isFirst(item.key)}}"></iron-icon>
-        </li>
-      </template>
-      <template is="dom-repeat" items="{{_toArray(data.game.disconnected)}}">
-        <li>
-          <span>{{item.value.name}}</span><iron-icon icon="star" hidden$="{{data.game.first !== item.key}}"></iron-icon> (disconnected)
         </li>
       </template>
     </ul>

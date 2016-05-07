@@ -11,22 +11,20 @@ type Game struct {
 	sync.RWMutex
 	Id      string `json:"gameId"`
 	Players map[string]*Player `json:"players"`
-	Left    map[string]*Player `json:"disconnected"`
 	Started bool `json:"started"`
 	First   string `json:"first"`
-	Info    map[string]*PlayerInfo
+	Info    map[string]*PlayerInfo `json:"playerInfo"`
 }
 
 func NewGame(gameId string) *Game {
 	return &Game{
 		Id: gameId,
 		Players: map[string]*Player{},
-		Left: map[string]*Player{},
 		Info: map[string]*PlayerInfo{},
 	}
 }
 
-// This is private info, sent only to the players individualy
+// This is private info, sent only to the players individually
 type PlayerInfo struct {
 	// only sent to spy
 	IsSpy    bool
@@ -37,10 +35,16 @@ type PlayerInfo struct {
 }
 
 func (g *Game) String() string {
+	if g == nil {
+		return "Game:<nil>"
+	}
 	return fmt.Sprintf("Game: %v", g.Id)
 }
 
 func (g *Game) Join(player *Player) {
+	if g == nil {
+		return
+	}
 	g.Lock()
 	g.Players[player.Id] = player
 	log.Println(player, "joined", g)
@@ -48,16 +52,10 @@ func (g *Game) Join(player *Player) {
 	g.update()
 }
 
-func (g *Game) Disconnect(player *Player) {
-	g.Lock()
-	delete(g.Players, player.Id)
-	g.Left[player.Id] = player
-	player.Connected = false
-	g.Unlock()
-	g.update()
-}
-
 func (g *Game) Leave(player *Player) {
+	if g == nil {
+		return
+	}
 	g.Lock()
 	delete(g.Players, player.Id)
 	log.Println(player, "left", g)
@@ -65,31 +63,25 @@ func (g *Game) Leave(player *Player) {
 	g.update()
 }
 
-// Or watch
 func (g *Game) Rejoin(player *Player) {
-	g.Lock()
-	player, found := g.Left[player.Id]
-	if found {
-		delete(g.Left, player.Id)
-		log.Println(player, "rejoined", g)
-		g.Players[player.Id] = player
-		g.Unlock()
-		g.update()
-	} else {
-		log.Println(player.Id, "watching", g.Id)
-		g.Unlock()
+	if g == nil {
+		return
 	}
+	g.update()
 }
 
 func (g *Game) Start() {
+	if g == nil {
+		return
+	}
 	g.Lock()
 	g.Started = true
 	nLoc := rand.Intn(len(placeData.Locations))
 	location := placeData.Locations[nLoc]
 	roles := placeData.Roles[location]
 	nRole := rand.Intn(len(roles))
-	nSpy := rand.Intn(len(g.Players) + len(g.Left))
-	nFirst := rand.Intn(len(g.Players) + len(g.Left))
+	nSpy := rand.Intn(len(g.Players))
+	nFirst := rand.Intn(len(g.Players))
 
 	i := 0
 	for id, _ := range g.Players {
@@ -115,6 +107,9 @@ func (g *Game) Start() {
 }
 
 func (g *Game) End() {
+	if g == nil {
+		return
+	}
 	g.Lock()
 	g.Started = false
 	g.Unlock()
@@ -122,28 +117,29 @@ func (g *Game) End() {
 }
 
 func (g *Game) update() {
-	// TODO: silly?
+	if g == nil {
+		return
+	}
+	g.Lock()
 	games.Save()
 	cookies.Save()
+	g.Unlock()
 
 	g.RLock()
+	defer g.RUnlock()
 	msg := map[string]interface{}{}
 	msg["type"] = "game"
 	msg["game"] = GameMessage{
 		Id: g.Id,
 		Players: g.Players,
-		Left: g.Left,
 		Started: g.Started,
 		First: g.First,
 	}
 	msg["info"] = placeData
 	for id, p := range g.Players {
 		msg["you"] = g.Info[id]
-		if err := p.conn.WriteJSON(msg); err != nil {
-			log.Println(err, id)
-		}
+		p.WriteJSON(msg)
 	}
-	g.RUnlock()
 }
 
 type GameMessage struct {
