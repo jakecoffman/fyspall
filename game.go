@@ -63,12 +63,21 @@ func (g *Game) Leave(player *Player) {
 	g.update()
 }
 
-func (g *Game) Rejoin(player *Player) {
+func (g *Game) TryRejoin(player *Player) bool {
 	if g == nil {
-		return
+		return false
 	}
+	g.RLock()
+	if _, ok := g.Players[player.Id]; !ok {
+		g.RUnlock()
+		return false
+	}
+	g.RUnlock()
+	g.Lock()
 	g.Players[player.Id] = player
+	g.Unlock()
 	g.update()
+	return true
 }
 
 func (g *Game) Start() {

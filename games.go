@@ -67,8 +67,7 @@ func (g *Games) Rejoin(player *Player) *Game {
 	g.RLock()
 	defer g.RUnlock()
 	for _, game := range g.games {
-		if _, ok := game.Players[player.Id]; ok {
-			game.Rejoin(player)
+		if ok := game.TryRejoin(player); ok {
 			return game
 		}
 	}
