@@ -58,3 +58,10 @@ func (p *Player) Page(page string) {
 	msg["page"] = "/"
 	p.WriteJSON(msg)
 }
+
+func (p *Player) Say(msg string) {
+	p.WriteJSON(map[string]string{
+		"type": "say",
+		"msg": msg,
+	})
+}

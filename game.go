@@ -13,6 +13,7 @@ type Game struct {
 	Id       string `json:"gameId"`
 	Players  map[string]*Player `json:"players"`
 	Started  bool `json:"started"`
+	Creator  string `json:"creator"`
 	First    string `json:"first"`
 	Deadline time.Time `json:"deadline"`
 	Info     map[string]*PlayerInfo `json:"playerInfo"`
@@ -49,6 +50,9 @@ func (g *Game) Join(player *Player) {
 	}
 	g.Lock()
 	g.Players[player.Id] = player
+	if len(g.Players) == 1 {
+		g.Creator = player.Id
+	}
 	log.Println(player, "joined", g)
 	g.Unlock()
 	g.update()
@@ -61,6 +65,17 @@ func (g *Game) Leave(player *Player) {
 	g.Lock()
 	delete(g.Players, player.Id)
 	log.Println(player, "left", g)
+	if g.Creator == player.Id && len(g.Players) > 0 {
+		nPlayer := rand.Intn(len(g.Players))
+		n := 0
+		for id, _ := range g.Players {
+			if nPlayer == n {
+				g.Creator = id
+				break
+			}
+			n += 1
+		}
+	}
 	g.Unlock()
 	g.update()
 }
@@ -82,10 +97,17 @@ func (g *Game) TryRejoin(player *Player) bool {
 	return true
 }
 
-func (g *Game) Start() {
+func (g *Game) Start(p *Player) {
 	if g == nil {
 		return
 	}
+	g.RLock()
+	if g.Creator != p.Id {
+		p.Say("Only game creator can start the game")
+		g.RUnlock()
+		return
+	}
+	g.RUnlock()
 	g.Lock()
 	g.Started = true
 	nLoc := rand.Intn(len(placeData.Locations))
@@ -114,15 +136,22 @@ func (g *Game) Start() {
 		g.Info[id] = pi
 		i += 1
 	}
-	g.Deadline = time.Now().Add(8*time.Minute)
+	g.Deadline = time.Now().Add(8 * time.Minute)
 	g.Unlock()
 	g.update()
 }
 
-func (g *Game) End() {
+func (g *Game) End(p *Player) {
 	if g == nil {
 		return
 	}
+	g.RLock()
+	if g.Creator != p.Id {
+		p.Say("Only game creator may end the game")
+		g.RUnlock()
+		return
+	}
+	g.RUnlock()
 	g.Lock()
 	g.Started = false
 	g.Info = map[string]*PlayerInfo{}
@@ -149,12 +178,23 @@ func (g *Game) update() {
 		Id: g.Id,
 		Players: g.Players,
 		Started: g.Started,
+		Creator: g.Creator,
 		First: g.First,
 		Deadline: g.Deadline,
 	}
 	msg["info"] = placeData
 	for id, p := range g.Players {
-		msg["you"] = g.Info[id]
+		info := g.Info[id]
+		if info == nil {
+			msg["you"] = struct{ Player *Player `json:"player"` }{p}
+		} else {
+			msg["you"] = EnhancedPlayerInfo{
+				Player: p,
+				IsSpy: info.IsSpy,
+				Location: info.Location,
+				Role: info.Role,
+			}
+		}
 		p.WriteJSON(msg)
 	}
 }
@@ -164,6 +204,17 @@ type GameMessage struct {
 	Players  map[string]*Player `json:"players"`
 	Left     map[string]*Player `json:"disconnected"`
 	Started  bool `json:"started"`
+	Creator  string `json:"creator"`
 	First    string `json:"first"`
 	Deadline time.Time `json:"deadline"`
+}
+
+type EnhancedPlayerInfo struct {
+	Player   *Player `json:"player"`
+	// only sent to spy
+	IsSpy    bool `json:"isSpy"`
+
+	// not sent to spy
+	Location string `json:"location"`
+	Role     string `json:"role"`
 }

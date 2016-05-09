@@ -133,9 +133,9 @@ func GameLoop(conn *websocket.Conn, player *Player, game *Game) {
 		case msg["action"] == "rejoin":
 			game.TryRejoin(player)
 		case msg["action"] == "start":
-			game.Start()
+			game.Start(player)
 		case msg["action"] == "end":
-			game.End()
+			game.End(player)
 		case msg["action"] == "leave":
 			game.Leave(player)
 			game = nil

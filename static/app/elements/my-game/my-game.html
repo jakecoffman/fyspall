@@ -58,7 +58,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <li>
           <span>{{item.value.name}}</span>
           <span hidden$="{{item.value.connected}}">(Disconnected)</span>
-          <iron-icon icon="star" hidden$="{{!isFirst(item.key)}}"></iron-icon>
+          <iron-icon icon="star" hidden$="{{!eq(item.key, data.game.first)}}"></iron-icon>
         </li>
       </template>
     </ul>
@@ -74,10 +74,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <paper-button raised on-tap="leaveGame">
         Leave Game
       </paper-button>
-      <paper-button raised on-tap="endGame" hidden="{{!data.game.started}}">
+      <paper-button raised on-tap="endGame" hidden="{{!data.game.started}}" disabled$="{{!eq(data.you.player.id, data.game.creator)}}">
         End Game
       </paper-button>
-      <paper-button raised on-tap="startGame" hidden="{{data.game.started}}">
+      <paper-button raised on-tap="startGame" hidden="{{data.game.started}}" disabled$="{{!eq(data.you.player.id, data.game.creator)}}">
         Start Game
       </paper-button>
     </div>
@@ -137,8 +137,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             }
           })
         },
-        isFirst: function(playerId) {
-          return this.data.game.first == playerId;
+        eq: function(thing1, thing2) {
+          return thing1 === thing2;
         },
         hideSpyness: function() {
           this.hide = !this.hide;
