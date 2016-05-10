@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"github.com/gorilla/websocket"
 	"time"
+	"strings"
 )
 
 var cookies *Cookies
@@ -45,7 +46,7 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 // since gorilla doesn't let me set headers on the handshake...
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	origin := r.Header.Get("Origin")
-	if origin == "http://localhost:5000" || origin == "http://www.jakecoffman.com" {
+	if strings.HasPrefix(origin, "http://localhost") || origin == "http://www.jakecoffman.com" {
 		w.Header().Set("Access-Control-Allow-Origin", origin)
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 	}
@@ -73,8 +74,11 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5000")
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	origin := r.Header.Get("Origin")
+	if strings.HasPrefix(origin, "http://localhost") || origin == "http://www.jakecoffman.com" {
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+	}
 	cookie, err := r.Cookie("spyfall")
 	if err != nil {
 		log.Println("No cookie", cookie, err)
