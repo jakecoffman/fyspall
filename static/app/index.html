@@ -18,7 +18,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <meta name="description" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="generator" content="Polymer Starter Kit">
-  <title>Polymer Starter Kit</title>
+  <title>Spyfall</title>
 
   <!-- Place favicon.ico in the `app/` directory -->
 
@@ -69,98 +69,71 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <template is="dom-bind" id="app">
   <spy-fall ws="{{ws}}" data="{{data}}"></spy-fall>
 
-  <paper-drawer-panel id="paperDrawerPanel">
-    <!-- Drawer Scroll Header Panel -->
-    <paper-scroll-header-panel drawer fixed>
+  <!-- Main Area -->
+  <paper-scroll-header-panel main id="headerPanelMain" condenses keep-condensed-header>
+    <!-- Main Toolbar -->
+    <paper-toolbar id="mainToolbar" class="tall">
 
-      <!-- Drawer Toolbar -->
-      <paper-toolbar id="drawerToolbar">
-        <span class="menu-name">Menu</span>
-      </paper-toolbar>
+      <span class="space"></span>
 
-      <!-- Drawer Content -->
-      <paper-menu class="app-menu" attr-for-selected="data-route" selected="[[route]]">
-        <a data-route="home" href="{{baseUrl}}">
-          <iron-icon icon="home"></iron-icon>
-          <span>Home</span>
-        </a>
+      <!-- Toolbar icons -->
+      <a data-route="home" href="{{baseUrl}}">
+        <paper-icon-button id="home-btn" icon="home"></paper-icon-button>
+      </a>
+      <!--<paper-icon-button icon="refresh"></paper-icon-button>-->
+      <!--<paper-icon-button icon="search"></paper-icon-button>-->
 
-        <!--<a data-route="users" href="{{baseUrl}}users">-->
-          <!--<iron-icon icon="info"></iron-icon>-->
-          <!--<span>Users</span>-->
-        <!--</a>-->
-
-        <!--<a data-route="contact" href="{{baseUrl}}contact">-->
-          <!--<iron-icon icon="mail"></iron-icon>-->
-          <!--<span>Contact</span>-->
-        <!--</a>-->
-      </paper-menu>
-    </paper-scroll-header-panel>
-
-    <!-- Main Area -->
-    <paper-scroll-header-panel main id="headerPanelMain" condenses keep-condensed-header>
-      <!-- Main Toolbar -->
-      <paper-toolbar id="mainToolbar" class="tall">
-        <paper-icon-button id="paperToggle" icon="menu" paper-drawer-toggle></paper-icon-button>
-
-        <span class="space"></span>
-
-        <!-- Toolbar icons -->
-        <!--<paper-icon-button icon="refresh"></paper-icon-button>-->
-        <!--<paper-icon-button icon="search"></paper-icon-button>-->
-
-        <!-- Application name -->
-        <div class="middle middle-container">
-          <div class="app-name">Spyfall</div>
-        </div>
-
-        <!-- Application sub title -->
-        <div class="bottom bottom-container">
-          <!--<div class="bottom-title">The future of the web today</div>-->
-        </div>
-      </paper-toolbar>
-
-      <!-- Main Content -->
-      <div class="content">
-        <iron-pages attr-for-selected="data-route" selected="{{route}}">
-            <section data-route="home" tabindex="-1">
-              <paper-material elevation="1">
-                <h2 class="page-title">Welcome</h2>
-                <my-greeting base="[[baseUrl]]" data="[[data]]"></my-greeting>
-              </paper-material>
-            </section>
-
-            <section data-route="new" tabindex="-1">
-              <paper-material elevation="1">
-                <h1 class="page-title" tabindex="-1">New game</h1>
-                <name-input ws="{{ws}}" name="{{name}}"></name-input>
-              </paper-material>
-            </section>
-
-            <section data-route="join" tabindex="-1">
-              <paper-material elevation="1">
-                <h1 class="page-title" tabindex="-1">New game</h1>
-                <game-input ws="{{ws}}" name="{{name}}" gameId="{{gameId}}"></game-input>
-              </paper-material>
-            </section>
-
-            <section data-route="game" tabindex="-1">
-              <paper-material elevation="-1">
-                <h1 class="page-title" tabindex="-1">Game: {{params.name}}</h1>
-                <my-game ws="{{ws}}" name="{{name}}" gameId="{{gameId}}" data="[[data]]"></my-game>
-              </paper-material>
-            </section>
-
-            <section data-route="contact" tabindex="-1">
-              <paper-material elevation="1">
-                <h1 class="page-title" tabindex="-1">Contact</h1>
-                <p>This is the contact section</p>
-              </paper-material>
-            </section>
-        </iron-pages>
+      <!-- Application name -->
+      <div class="middle middle-container">
+        <div class="app-name">Spy game</div>
       </div>
-    </paper-scroll-header-panel>
-  </paper-drawer-panel>
+
+      <!-- Application sub title -->
+      <div class="bottom bottom-container">
+        <!--<div class="bottom-title"></div>-->
+      </div>
+    </paper-toolbar>
+
+    <!-- Main Content -->
+    <div class="content">
+      <iron-pages attr-for-selected="data-route" selected="{{route}}">
+        <section data-route="home" tabindex="-1">
+          <paper-material elevation="1">
+            <h2 class="page-title">Welcome</h2>
+            <my-greeting base="[[baseUrl]]" data="[[data]]"></my-greeting>
+          </paper-material>
+        </section>
+
+        <section data-route="new" tabindex="-1">
+          <paper-material elevation="1">
+            <h1 class="page-title" tabindex="-1">New game</h1>
+            <name-input ws="{{ws}}" name="{{name}}"></name-input>
+          </paper-material>
+        </section>
+
+        <section data-route="join" tabindex="-1">
+          <paper-material elevation="1">
+            <h1 class="page-title" tabindex="-1">New game</h1>
+            <game-input ws="{{ws}}" name="{{name}}" gameId="{{gameId}}"></game-input>
+          </paper-material>
+        </section>
+
+        <section data-route="game" tabindex="-1">
+          <paper-material elevation="-1">
+            <h1 class="page-title" tabindex="-1">Game: {{params.name}}</h1>
+            <my-game ws="{{ws}}" name="{{name}}" gameId="{{gameId}}" data="[[data]]"></my-game>
+          </paper-material>
+        </section>
+
+        <section data-route="contact" tabindex="-1">
+          <paper-material elevation="1">
+            <h1 class="page-title" tabindex="-1">Contact</h1>
+            <p>This is the contact section</p>
+          </paper-material>
+        </section>
+      </iron-pages>
+    </div>
+  </paper-scroll-header-panel>
 
   <paper-toast id="toast">
     <span class="toast-hide-button" role="button" tabindex="0" onclick="app.$.toast.hide()">Ok</span>
