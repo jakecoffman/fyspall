@@ -37,8 +37,6 @@ type jsonPlayer struct {
 }
 
 func (p *Player) MarshalJSON() ([]byte, error) {
-	p.RLock()
-	defer p.RUnlock()
 	return json.Marshal(&jsonPlayer{
 		Id: p.id,
 		Name: p.name,
@@ -47,8 +45,6 @@ func (p *Player) MarshalJSON() ([]byte, error) {
 }
 
 func (p *Player) UnmarshalJSON(b []byte) error {
-	p.RLock()
-	defer p.RUnlock()
 	temp := &jsonPlayer{}
 	err := json.Unmarshal(b, temp)
 	p.id = temp.Id

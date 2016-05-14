@@ -56,8 +56,6 @@ func (g *Game) String() string {
 }
 
 func (g *Game) MarshalJSON() ([]byte, error) {
-	g.RLock()
-	defer g.RUnlock()
 	return json.Marshal(&jsonGame{
 		Id: g.id,
 		Players: g.players,
@@ -70,8 +68,6 @@ func (g *Game) MarshalJSON() ([]byte, error) {
 }
 
 func (g *Game) UnmarshalJSON(b []byte) error {
-	g.Lock()
-	defer g.Unlock()
 	jsonGame := &jsonGame{}
 	err := json.Unmarshal(b, jsonGame)
 	g.id = jsonGame.Id
@@ -205,11 +201,12 @@ func (g *Game) update() {
 	if g == nil {
 		return
 	}
+	g.RLock()
+	defer g.RUnlock()
+
 	games.Save()
 	cookies.Save()
 
-	g.RLock()
-	defer g.RUnlock()
 	msg := map[string]interface{}{}
 	msg["type"] = "game"
 	msg["game"] = GameMessage{
