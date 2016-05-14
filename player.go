@@ -72,8 +72,8 @@ func (p *Player) Disconnect() {
 }
 
 func (p *Player) WriteJSON(msg interface{}) {
-	p.Lock()
-	defer p.Unlock()
+	p.RLock()
+	defer p.RUnlock()
 	if !p.connected {
 		return
 	}
@@ -87,7 +87,7 @@ func (p *Player) WriteJSON(msg interface{}) {
 func (p *Player) Page(page string) {
 	p.WriteJSON(map[string]string{
 		"type": "page",
-		"page": "/",
+		"page": page,
 	})
 }
 

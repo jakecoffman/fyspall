@@ -205,10 +205,8 @@ func (g *Game) update() {
 	if g == nil {
 		return
 	}
-	g.Lock()
 	games.Save()
 	cookies.Save()
-	g.Unlock()
 
 	g.RLock()
 	defer g.RUnlock()
