@@ -78,7 +78,7 @@ func (p *Player) WriteJSON(msg interface{}) {
 		return
 	}
 	if err := p.conn.WriteJSON(msg); err != nil {
-		log.Println(err, p.id)
+		log.Println("Player", p.id, "is disconnected")
 		p.conn = nil
 		p.connected = false
 	}
