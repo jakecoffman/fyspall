@@ -129,7 +129,6 @@ func (g *Game) TryRejoin(player *Player) bool {
 	g.Lock()
 	g.players[player.id] = player
 	g.Unlock()
-	g.update()
 	return true
 }
 

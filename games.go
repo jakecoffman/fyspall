@@ -65,12 +65,14 @@ func (g *Games) Load() error {
 
 func (g *Games) Rejoin(player *Player) *Game {
 	g.RLock()
-	defer g.RUnlock()
 	for _, game := range g.games {
 		if ok := game.TryRejoin(player); ok {
 			log.Println(player, "rejoined", game)
+			g.RUnlock()
+			game.update()
 			return game
 		}
 	}
+	g.RUnlock()
 	return nil
 }

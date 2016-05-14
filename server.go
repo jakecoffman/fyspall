@@ -103,11 +103,12 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	player.Connect(conn)
-	game := games.Rejoin(player)
-	GameLoop(player, game)
+	GameLoop(player)
 }
 
-func GameLoop(player *Player, game *Game) {
+func GameLoop(player *Player) {
+	game := games.Rejoin(player)
+
 	for {
 		// react to messages from this player
 		msg := map[string]string{}
