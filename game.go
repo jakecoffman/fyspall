@@ -6,10 +6,21 @@ import (
 	"log"
 	"math/rand"
 	"time"
+	"encoding/json"
 )
 
 type Game struct {
 	sync.RWMutex
+	id       string
+	players  map[string]*Player
+	started  bool
+	creator  string
+	first    string
+	deadline time.Time
+	info     map[string]*PlayerInfo
+}
+
+type jsonGame struct {
 	Id       string `json:"gameId"`
 	Players  map[string]*Player `json:"players"`
 	Started  bool `json:"started"`
@@ -17,14 +28,6 @@ type Game struct {
 	First    string `json:"first"`
 	Deadline time.Time `json:"deadline"`
 	Info     map[string]*PlayerInfo `json:"playerInfo"`
-}
-
-func NewGame(gameId string) *Game {
-	return &Game{
-		Id: gameId,
-		Players: map[string]*Player{},
-		Info: map[string]*PlayerInfo{},
-	}
 }
 
 // This is private info, sent only to the players individually
@@ -37,11 +40,48 @@ type PlayerInfo struct {
 	Role     string `json:"role"`
 }
 
+func NewGame(gameId string) *Game {
+	return &Game{
+		id: gameId,
+		players: map[string]*Player{},
+		info: map[string]*PlayerInfo{},
+	}
+}
+
 func (g *Game) String() string {
 	if g == nil {
 		return "Game:<nil>"
 	}
-	return fmt.Sprintf("Game: %v", g.Id)
+	return fmt.Sprintf("Game: %v", g.id)
+}
+
+func (g *Game) MarshalJSON() ([]byte, error) {
+	g.RLock()
+	defer g.RUnlock()
+	return json.Marshal(&jsonGame{
+		Id: g.id,
+		Players: g.players,
+		Started: g.started,
+		Creator: g.creator,
+		First: g.first,
+		Deadline: g.deadline,
+		Info: g.info,
+	})
+}
+
+func (g *Game) UnmarshalJSON(b []byte) error {
+	g.Lock()
+	defer g.Unlock()
+	jsonGame := &jsonGame{}
+	err := json.Unmarshal(b, jsonGame)
+	g.id = jsonGame.Id
+	g.players = jsonGame.Players
+	g.started = jsonGame.Started
+	g.creator = jsonGame.Creator
+	g.first = jsonGame.First
+	g.deadline = jsonGame.Deadline
+	g.info = jsonGame.Info
+	return err
 }
 
 func (g *Game) Join(player *Player) {
@@ -49,9 +89,9 @@ func (g *Game) Join(player *Player) {
 		return
 	}
 	g.Lock()
-	g.Players[player.Id] = player
-	if len(g.Players) == 1 {
-		g.Creator = player.Id
+	g.players[player.id] = player
+	if len(g.players) == 1 {
+		g.creator = player.id
 	}
 	log.Println(player, "joined", g)
 	g.Unlock()
@@ -63,14 +103,14 @@ func (g *Game) Leave(player *Player) {
 		return
 	}
 	g.Lock()
-	delete(g.Players, player.Id)
+	delete(g.players, player.id)
 	log.Println(player, "left", g)
-	if g.Creator == player.Id && len(g.Players) > 0 {
-		nPlayer := rand.Intn(len(g.Players))
+	if g.creator == player.id && len(g.players) > 0 {
+		nPlayer := rand.Intn(len(g.players))
 		n := 0
-		for id, _ := range g.Players {
+		for id, _ := range g.players {
 			if nPlayer == n {
-				g.Creator = id
+				g.creator = id
 				break
 			}
 			n += 1
@@ -85,13 +125,13 @@ func (g *Game) TryRejoin(player *Player) bool {
 		return false
 	}
 	g.RLock()
-	if _, ok := g.Players[player.Id]; !ok {
+	if _, ok := g.players[player.id]; !ok {
 		g.RUnlock()
 		return false
 	}
 	g.RUnlock()
 	g.Lock()
-	g.Players[player.Id] = player
+	g.players[player.id] = player
 	g.Unlock()
 	g.update()
 	return true
@@ -102,26 +142,26 @@ func (g *Game) Start(p *Player) {
 		return
 	}
 	g.RLock()
-	if g.Creator != p.Id {
+	if g.creator != p.id {
 		p.Say("Only game creator can start the game")
 		g.RUnlock()
 		return
 	}
 	g.RUnlock()
 	g.Lock()
-	g.Started = true
+	g.started = true
 	nLoc := rand.Intn(len(placeData.Locations))
 	location := placeData.Locations[nLoc]
 	roles := placeData.Roles[location]
 	nRole := rand.Intn(len(roles))
-	nSpy := rand.Intn(len(g.Players))
-	nFirst := rand.Intn(len(g.Players))
+	nSpy := rand.Intn(len(g.players))
+	nFirst := rand.Intn(len(g.players))
 
 	i := 0
-	for id, _ := range g.Players {
+	for id, _ := range g.players {
 		pi := &PlayerInfo{}
 		if i == nFirst {
-			g.First = id
+			g.first = id
 		}
 		if i == nSpy {
 			pi.IsSpy = true
@@ -133,10 +173,10 @@ func (g *Game) Start(p *Player) {
 				nRole = 0
 			}
 		}
-		g.Info[id] = pi
+		g.info[id] = pi
 		i += 1
 	}
-	g.Deadline = time.Now().Add(8 * time.Minute)
+	g.deadline = time.Now().Add(8 * time.Minute)
 	g.Unlock()
 	g.update()
 }
@@ -146,17 +186,17 @@ func (g *Game) End(p *Player) {
 		return
 	}
 	g.RLock()
-	if g.Creator != p.Id {
+	if g.creator != p.id {
 		p.Say("Only game creator may end the game")
 		g.RUnlock()
 		return
 	}
 	g.RUnlock()
 	g.Lock()
-	g.Started = false
-	g.Info = map[string]*PlayerInfo{}
-	g.First = ""
-	g.Deadline = time.Time{}
+	g.started = false
+	g.info = map[string]*PlayerInfo{}
+	g.first = ""
+	g.deadline = time.Time{}
 	g.Unlock()
 	g.update()
 }
@@ -175,16 +215,16 @@ func (g *Game) update() {
 	msg := map[string]interface{}{}
 	msg["type"] = "game"
 	msg["game"] = GameMessage{
-		Id: g.Id,
-		Players: g.Players,
-		Started: g.Started,
-		Creator: g.Creator,
-		First: g.First,
-		Deadline: g.Deadline,
+		Id: g.id,
+		Players: g.players,
+		Started: g.started,
+		Creator: g.creator,
+		First: g.first,
+		Deadline: g.deadline,
 	}
 	msg["info"] = placeData
-	for id, p := range g.Players {
-		info := g.Info[id]
+	for id, p := range g.players {
+		info := g.info[id]
 		if info == nil {
 			msg["you"] = struct{ Player *Player `json:"player"` }{p}
 		} else {

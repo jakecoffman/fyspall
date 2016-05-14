@@ -30,7 +30,7 @@ func (c *Cookies) Delete(key string) {
 
 func (c *Cookies) Set(player *Player) {
 	c.Lock()
-	c.cookies[player.Id] = player
+	c.cookies[player.id] = player
 	c.Unlock()
 	c.Save()
 }

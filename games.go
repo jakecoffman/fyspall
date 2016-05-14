@@ -24,7 +24,7 @@ func (g *Games) Get(gameId string) *Game {
 
 func (g *Games) Set(game *Game) {
 	g.Lock()
-	g.games[game.Id] = game
+	g.games[game.id] = game
 	g.Unlock()
 	g.Save()
 }
@@ -56,8 +56,8 @@ func (g *Games) Load() error {
 	}
 	// mark all players as disconnected since the server restarted
 	for _, game := range g.games {
-		for _, p := range game.Players {
-			p.Connected = false
+		for _, p := range game.players {
+			p.connected = false
 		}
 	}
 	return nil

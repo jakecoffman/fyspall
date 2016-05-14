@@ -60,9 +60,9 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		cookies.Delete(cookie.Value)
 		fallthrough
 	case err == http.ErrNoCookie:
-		player := NewPlayer("", nil)
+		player := NewPlayer()
 		log.Println("New", player)
-		cookie = &http.Cookie{Name: "spyfall", Value: player.Id}
+		cookie = &http.Cookie{Name: "spyfall", Value: player.id}
 		cookies.Set(player)
 		http.SetCookie(w, cookie)
 	default:
@@ -92,6 +92,7 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Println("")
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -102,9 +103,7 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	player.conn = conn
-	player.Connected = true
-
+	player.Connect(conn)
 	game := games.Rejoin(player)
 	GameLoop(conn, player, game)
 }
@@ -124,14 +123,14 @@ func GameLoop(conn *websocket.Conn, player *Player, game *Game) {
 			game.Leave(player)
 			gameId := strconv.Itoa(rand.Int())
 			player.Page("/game/" + gameId)
-			player.Name = msg["name"]
+			player.name = msg["name"]
 			game = NewGame(gameId)
 			games.Set(game)
 			game.Join(player)
 		case msg["action"] == "join":
 			game.Leave(player)
 			gameId := msg["gameId"]
-			player.Name = msg["name"]
+			player.name = msg["name"]
 			game = games.Get(gameId)
 			game.Join(player)
 		case msg["action"] == "rejoin":
