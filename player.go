@@ -25,8 +25,6 @@ type Player struct {
 }
 
 func (p *Player) String() string {
-	p.RLock()
-	defer p.RUnlock()
 	return fmt.Sprintf("Player: %v", p.id)
 }
 
