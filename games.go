@@ -68,6 +68,7 @@ func (g *Games) Rejoin(player *Player) *Game {
 	defer g.RUnlock()
 	for _, game := range g.games {
 		if ok := game.TryRejoin(player); ok {
+			log.Println(player, "rejoined", game)
 			return game
 		}
 	}
