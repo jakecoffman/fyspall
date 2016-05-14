@@ -68,8 +68,8 @@ func (p *Player) Disconnect() {
 }
 
 func (p *Player) WriteJSON(msg interface{}) {
-	p.RLock()
-	defer p.RUnlock()
+	p.Lock()
+	defer p.Unlock()
 	if !p.connected {
 		return
 	}
