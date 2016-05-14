@@ -17282,17 +17282,12 @@ module.exports = Array.isArray || function (arr) {
       next();
     }
 
-    function closeDrawer(ctx, next) {
-      app.closeDrawer();
-      next();
-    }
-
     function setFocus(selected){
       document.querySelector('section[data-route="' + selected + '"] .page-title').focus();
     }
 
     // Routes
-    page('*', scrollToTop, closeDrawer, function(ctx, next) {
+    page('*', scrollToTop, function(ctx, next) {
       next();
     });
 
@@ -17615,6 +17610,10 @@ module.exports = Array.isArray || function (arr) {
       paper-button[disabled] {
         color: #FFFFFF;
         background-color: var(--light-accent-color);
+      }
+
+      paper-icon-button {
+        color: #FFFFFF;
       }
     </style>
   </template>
