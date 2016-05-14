@@ -112,9 +112,6 @@ func GameLoop(player *Player) {
 	for {
 		// react to messages from this player
 		msg := map[string]string{}
-		if player.conn == nil || !player.connected {
-			return
-		}
 		if err := player.conn.ReadJSON(&msg); err != nil {
 			player.Disconnect()
 			game.update()
