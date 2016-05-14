@@ -104,14 +104,14 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	player.Connect(conn)
 	game := games.Rejoin(player)
-	GameLoop(conn, player, game)
+	GameLoop(player, game)
 }
 
-func GameLoop(conn *websocket.Conn, player *Player, game *Game) {
+func GameLoop(player *Player, game *Game) {
 	for {
 		// react to messages from this player
 		msg := map[string]string{}
-		if err := conn.ReadJSON(&msg); err != nil {
+		if err := player.conn.ReadJSON(&msg); err != nil {
 			player.Disconnect()
 			game.update()
 			return

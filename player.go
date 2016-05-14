@@ -52,19 +52,15 @@ func (p *Player) UnmarshalJSON(b []byte) error {
 }
 
 func (p *Player) Connect(ws *websocket.Conn) {
-	p.Lock()
 	p.conn = ws
 	p.connected = true
 	log.Println(p, "has connected")
-	p.Unlock()
 }
 
 func (p *Player) Disconnect() {
-	p.Lock()
 	p.conn = nil
 	p.connected = false
 	log.Println(p, "has disconnected")
-	p.Unlock()
 }
 
 func (p *Player) WriteJSON(msg interface{}) {
