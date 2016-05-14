@@ -33,14 +33,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <h2>You</h2>
       <paper-checkbox name="hide" id="hide" on-click="hideSpyness">Hide</paper-checkbox>
       <div hidden$="{{hide}}">
-        <div hidden="{{!data.you.IsSpy}}">
+        <div hidden="{{!data.you.isSpy}}">
           <p>You are the spy!</p>
           <p>
             Try to figure out where everyone else is. If you
             guess it before you are found out, you win!
           </p>
         </div>
-        <div hidden="{{data.you.IsSpy}}">
+        <div hidden="{{data.you.isSpy}}">
           <p>Location: <em>{{data.you.location}}</em></p>
           <p>Role: <em>{{data.you.role}}</em></p>
           <p>
