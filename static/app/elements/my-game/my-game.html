@@ -12,6 +12,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../../bower_components/iron-icons/av-icons.html">
 <link rel="import" href="../count-down/count-down.html">
 
 <dom-module id="my-game">
@@ -24,6 +26,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       #actions {
         display: flex;
         justify-content: space-between;
+      }
+
+      paper-fab {
+        position: fixed;
+        bottom: 32px;
+        right: 32px;
+      }
+
+      .player {
+        display: flex;
+
+      }
+
+      #kick {
+        color: black;
       }
     </style>
 
@@ -53,15 +70,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </div>
 
     <h2>Players</h2>
-    <ul>
       <template is="dom-repeat" items="{{_toArray(data.game.players)}}">
-        <li>
+        <paper-card class="player">
           <span>{{item.value.name}}</span>
           <span hidden$="{{item.value.connected}}">(Disconnected)</span>
           <iron-icon icon="star" hidden$="{{!eq(item.key, data.game.first)}}"></iron-icon>
-        </li>
+          <paper-icon-button id="kick" icon="delete" on-tap="kick(item)"></paper-icon-button>
+        </paper-card>
       </template>
-    </ul>
 
     <h2>Possible Locations</h2>
     <ul>
@@ -71,15 +87,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </ul>
 
     <div id="actions">
-      <paper-button raised on-tap="leaveGame">
-        Leave Game
-      </paper-button>
-      <paper-button raised on-tap="endGame" hidden="{{!data.game.started}}" disabled$="{{!eq(data.you.player.id, data.game.creator)}}">
-        End Game
-      </paper-button>
-      <paper-button raised on-tap="startGame" hidden="{{data.game.started}}" disabled$="{{!eq(data.you.player.id, data.game.creator)}}">
-        Start Game
-      </paper-button>
+      <paper-fab on-tap="endGame" title="End" icon="av:stop" hidden="{{!data.game.started}}" disabled$="{{!eq(data.you.player.id, data.game.creator)}}">
+      </paper-fab>
+      <paper-fab on-tap="startGame" title="Start" icon="av:play-arrow" hidden="{{data.game.started}}" disabled$="{{!eq(data.you.player.id, data.game.creator)}}">
+      </paper-fab>
     </div>
 
     <content></content>
@@ -146,12 +157,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         startGame: function() {
           this.ws.send(JSON.stringify({
             action: "start"
-          }));
-        },
-        leaveGame: function() {
-          this.data = {};
-          this.ws.send(JSON.stringify({
-            action: 'leave'
           }));
         },
         endGame: function() {

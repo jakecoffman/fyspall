@@ -10,6 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
 
 <dom-module id="game-input">
   <template>
@@ -24,9 +25,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     </style>
 
-    <p>Enter your name</p>
-    <input id="name-input" value="{{name::input}}" placeholder="name">
-    <input id="game-input" value="{{gameId::input}}" placeholder="game">
+    <paper-input id="name-input" value="{{name}}" placeholder="name"></paper-input>
+    <paper-input id="game-input" value="{{gameId}}" placeholder="game"></paper-input>
     <paper-button raised on-tap="_start">Join</paper-button>
 
     <content></content>

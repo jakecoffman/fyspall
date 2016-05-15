@@ -116,6 +116,22 @@ func (g *Game) Leave(player *Player) {
 	g.update()
 }
 
+func (g *Game) Kick(player *Player, kickee string) bool {
+	if g == nil {
+		return false
+	}
+	g.RLock()
+	for id, p := range g.players {
+		if id == kickee {
+			g.RUnlock()
+			g.Leave(p)
+			return true
+		}
+	}
+	g.RUnlock()
+	return false
+}
+
 func (g *Game) TryRejoin(player *Player) bool {
 	if g == nil {
 		return false
