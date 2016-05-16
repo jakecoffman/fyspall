@@ -58,6 +58,19 @@
           }
         },
         dateChanged: function () {
+          clearInterval(this.interval);
+          this.total = Date.parse(this.deadline) - new Date().getTime();
+          this.seconds = this.pad(Math.floor((this.total / 1000) % 60), 2);
+          this.minutes = this.pad(Math.floor((this.total / 1000 / 60) % 60), 2);
+
+          if (this.total <= 0) {
+            this.timesUp = true;
+          } else {
+            this.timesUp = false;
+            this.interval = setInterval(this.tick.bind(this), 500);
+          }
+        },
+        tick: function() {
           this.total = Date.parse(this.deadline) - new Date().getTime();
           this.seconds = this.pad(Math.floor((this.total / 1000) % 60), 2);
           this.minutes = this.pad(Math.floor((this.total / 1000 / 60) % 60), 2);
@@ -65,11 +78,6 @@
           if (this.total <= 0) {
             this.timesUp = true;
             clearInterval(this.interval);
-            return;
-          }
-          this.timesUp = false;
-          if (!this.interval) {
-            this.interval = setInterval(this.dateChanged.bind(this), 500);
           }
         },
         pad: function(num, size) {
