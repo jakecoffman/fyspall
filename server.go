@@ -121,7 +121,7 @@ func GameLoop(player *Player) {
 		switch {
 		case msg["action"] == "new":
 			game.Leave(player)
-			gameId := strconv.Itoa(rand.Int())
+			gameId := strconv.Itoa(rand.Int())[0:7]
 			player.Page("/game/" + gameId)
 			player.name = msg["name"]
 			game = NewGame(gameId)
