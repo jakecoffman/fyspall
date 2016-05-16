@@ -132,7 +132,11 @@ func GameLoop(player *Player) {
 			gameId := msg["gameId"]
 			player.name = msg["name"]
 			game = games.Get(gameId)
-			game.Join(player)
+			if game == nil {
+				player.Say("No such game")
+			} else {
+				game.Join(player)
+			}
 		case msg["action"] == "rejoin":
 			game.TryRejoin(player)
 		case msg["action"] == "start":
@@ -143,8 +147,12 @@ func GameLoop(player *Player) {
 			game.Leave(player)
 			game = nil
 			player.Page("/")
+		case msg["action"] == "kick":
+			if game.Kick(player, msg["player"]) {
+				player.Say("Player kicked")
+			}
 		default:
-			log.Println("WAT:", msg)
+			player.Say("I don't understand")
 		}
 	}
 }

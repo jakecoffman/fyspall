@@ -10,8 +10,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../../bower_components/paper-card/paper-card.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../../bower_components/iron-icons/av-icons.html">
 <link rel="import" href="../count-down/count-down.html">
 
 <dom-module id="my-game">
@@ -24,6 +27,31 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       #actions {
         display: flex;
         justify-content: space-between;
+      }
+
+      paper-fab {
+        position: fixed;
+        bottom: 32px;
+        right: 32px;
+      }
+
+      paper-material {
+        background-color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .kick {
+        color: black;
+      }
+
+      .ok {
+        color: green;
+      }
+
+      .danger {
+        color: red;
       }
     </style>
 
@@ -53,33 +81,32 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </div>
 
     <h2>Players</h2>
-    <ul>
       <template is="dom-repeat" items="{{_toArray(data.game.players)}}">
-        <li>
-          <span>{{item.value.name}}</span>
-          <span hidden$="{{item.value.connected}}">(Disconnected)</span>
-          <iron-icon icon="star" hidden$="{{!eq(item.key, data.game.first)}}"></iron-icon>
-        </li>
+        <paper-material>
+          <span>
+            <span hidden$="{{!item.value.connected}}"><iron-icon class="ok" icon="check-circle"></iron-icon></span>
+            <span hidden$="{{item.value.connected}}"><iron-icon class="danger" icon="warning"></iron-icon></span>
+          </span>
+          <span>
+            <span>{{item.value.name}}</span>
+            <iron-icon icon="star" hidden$="{{!eq(item.key, data.game.first)}}"></iron-icon>
+          </span>
+          <paper-icon-button class="kick" icon="delete" on-tap="kick" data-player$="{{item.key}}" disabled$="{{!eq(data.you.player.id, data.game.creator)}}"></paper-icon-button>
+        </paper-material>
       </template>
-    </ul>
 
     <h2>Possible Locations</h2>
     <ul>
-      <template is="dom-repeat" items="{{data.info.Locations}}">
-        <li>{{item}}</li>
-      </template>
+    <template is="dom-repeat" items="{{data.info.Locations}}">
+      <li>{{item}}</li>
+    </template>
     </ul>
 
     <div id="actions">
-      <paper-button raised on-tap="leaveGame">
-        Leave Game
-      </paper-button>
-      <paper-button raised on-tap="endGame" hidden="{{!data.game.started}}" disabled$="{{!eq(data.you.player.id, data.game.creator)}}">
-        End Game
-      </paper-button>
-      <paper-button raised on-tap="startGame" hidden="{{data.game.started}}" disabled$="{{!eq(data.you.player.id, data.game.creator)}}">
-        Start Game
-      </paper-button>
+      <paper-fab on-tap="endGame" title="End" icon="av:stop" hidden="{{!data.game.started}}" disabled$="{{!eq(data.you.player.id, data.game.creator)}}">
+      </paper-fab>
+      <paper-fab on-tap="startGame" title="Start" icon="av:play-arrow" hidden="{{data.game.started}}" disabled$="{{!eq(data.you.player.id, data.game.creator)}}">
+      </paper-fab>
     </div>
 
     <content></content>
@@ -148,15 +175,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             action: "start"
           }));
         },
-        leaveGame: function() {
-          this.data = {};
-          this.ws.send(JSON.stringify({
-            action: 'leave'
-          }));
-        },
         endGame: function() {
           this.ws.send(JSON.stringify({
             action: 'end'
+          }));
+        },
+        kick: function(e) {
+          let p = Polymer.dom(event).localTarget.dataset.player;
+          console.log("PLAYER:", p);
+          this.ws.send(JSON.stringify({
+            action: 'kick',
+            player: p
           }));
         }
       });

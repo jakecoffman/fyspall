@@ -26,7 +26,7 @@
     <paper-toast id="toast" text="Connecting..." opened duration="0">
       <a id="reconnect" href="#" on-tap="ready" hidden$="{{hide}}">retry</a>
     </paper-toast>
-    <paper-toast id="error"></paper-toast>
+    <paper-toast id="say"></paper-toast>
   </template>
 
   <script>
@@ -101,9 +101,9 @@
                 page('/game/' + json.game.gameId);
                 break;
 
-              case "error":
-                this.$.error.text = json.message;
-                this.$.error.open();
+              case "say":
+                this.$.say.text = json.msg;
+                this.$.say.open();
                 break;
 
               default:
