@@ -124,7 +124,13 @@ func (g *Game) Kick(player *Player, kickee string) bool {
 	for id, p := range g.players {
 		if id == kickee {
 			g.RUnlock()
-			g.Leave(p)
+			g.Lock()
+			delete(g.players, p.id)
+			p.Page("/")
+			p.Say("You were kicked by " + player.name)
+			log.Println(p, "was kicked from", g, "by", player)
+			g.Unlock()
+			g.update()
 			return true
 		}
 	}
