@@ -117,6 +117,7 @@ func GameLoop(player *Player) {
 			game.update()
 			return
 		}
+		log.Println(msg)
 
 		switch {
 		case msg["action"] == "new":
@@ -152,7 +153,9 @@ func GameLoop(player *Player) {
 				player.Say("Player kicked")
 			}
 		default:
-			player.Say("I don't understand")
+			response := "I don't understand '" + msg["action"] + "'"
+			log.Println(response)
+			player.Say(response)
 		}
 	}
 }

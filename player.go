@@ -3,7 +3,6 @@ package spyfall
 import (
 	"strconv"
 	"fmt"
-	"github.com/gorilla/websocket"
 	"math/rand"
 	"sync"
 	"log"
@@ -20,8 +19,13 @@ type Player struct {
 	sync.RWMutex
 	id        string
 	name      string
-	conn      *websocket.Conn
+	conn      Connection
 	connected bool
+}
+
+type Connection interface {
+	WriteJSON(interface{}) error
+	ReadJSON(interface{}) error
 }
 
 func (p *Player) String() string {
@@ -51,7 +55,7 @@ func (p *Player) UnmarshalJSON(b []byte) error {
 	return err
 }
 
-func (p *Player) Connect(ws *websocket.Conn) {
+func (p *Player) Connect(ws Connection) {
 	p.conn = ws
 	p.connected = true
 	log.Println(p, "has connected")
