@@ -228,9 +228,9 @@ func (g *Game) update() {
 	games.Save()
 	cookies.Save()
 
-	msg := map[string]interface{}{}
-	msg["type"] = "game"
-	msg["game"] = GameMessage{
+	msg := Message{}
+	msg.Type = "game"
+	msg.Game = GameMessage{
 		Id: g.id,
 		Players: g.players,
 		Started: g.started,
@@ -238,13 +238,13 @@ func (g *Game) update() {
 		First: g.first,
 		Deadline: g.deadline,
 	}
-	msg["info"] = placeData
+	msg.Info = placeData
 	for id, p := range g.players {
 		info := g.info[id]
 		if info == nil {
-			msg["you"] = struct{ Player *Player `json:"player"` }{p}
+			msg.You = EnhancedPlayerInfo{Player:p}
 		} else {
-			msg["you"] = EnhancedPlayerInfo{
+			msg.You = EnhancedPlayerInfo{
 				Player: p,
 				IsSpy: info.IsSpy,
 				Location: info.Location,
@@ -253,6 +253,13 @@ func (g *Game) update() {
 		}
 		p.WriteJSON(msg)
 	}
+}
+
+type Message struct {
+	Type string `json:"type"`
+	Game GameMessage `json:"game"`
+	Info Places `json:"places"`
+	You EnhancedPlayerInfo `json:"you"`
 }
 
 type GameMessage struct {
