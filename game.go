@@ -48,14 +48,11 @@ func NewGame(gameId string) *Game {
 	}
 }
 
-func (g *Game) String() string {
-	if g == nil {
-		return "Game:<nil>"
-	}
+func (g Game) String() string {
 	return fmt.Sprintf("Game: %v", g.id)
 }
 
-func (g *Game) MarshalJSON() ([]byte, error) {
+func (g Game) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&jsonGame{
 		Id: g.id,
 		Players: g.players,
@@ -225,8 +222,8 @@ func (g *Game) update() {
 	g.RLock()
 	defer g.RUnlock()
 
-	games.Save()
-	cookies.Save()
+	//games.Save()
+	//cookies.Save()
 
 	msg := Message{}
 	msg.Type = "game"
@@ -251,7 +248,11 @@ func (g *Game) update() {
 				Role: info.Role,
 			}
 		}
-		p.WriteJSON(msg)
+		if err := p.WriteJSON(msg); err != nil {
+			log.Println("Failed sending update to", p)
+		} else {
+			log.Println("Sent update to", p)
+		}
 	}
 }
 

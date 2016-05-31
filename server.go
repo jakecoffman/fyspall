@@ -113,11 +113,11 @@ func GameLoop(player *Player) {
 		// react to messages from this player
 		msg := map[string]string{}
 		if err := player.conn.ReadJSON(&msg); err != nil {
+			log.Println(player, err)
 			player.Disconnect()
 			game.update()
 			return
 		}
-		log.Println(msg)
 
 		switch {
 		case msg["action"] == "new":

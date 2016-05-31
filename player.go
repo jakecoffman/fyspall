@@ -28,7 +28,7 @@ type Connection interface {
 	ReadJSON(interface{}) error
 }
 
-func (p *Player) String() string {
+func (p Player) String() string {
 	return fmt.Sprintf("Player: %v", p.id)
 }
 
@@ -38,7 +38,7 @@ type jsonPlayer struct {
 	Connected bool `json:"connected"`
 }
 
-func (p *Player) MarshalJSON() ([]byte, error) {
+func (p Player) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&jsonPlayer{
 		Id: p.id,
 		Name: p.name,
@@ -56,26 +56,32 @@ func (p *Player) UnmarshalJSON(b []byte) error {
 }
 
 func (p *Player) Connect(ws Connection) {
+	p.Lock()
+	defer p.Unlock()
 	p.conn = ws
 	p.connected = true
 	log.Println(p, "has connected")
 }
 
 func (p *Player) Disconnect() {
+	p.Lock()
+	defer p.Unlock()
 	p.conn = nil
 	p.connected = false
 	log.Println(p, "has disconnected")
 }
 
-func (p *Player) WriteJSON(msg interface{}) {
+func (p *Player) WriteJSON(msg interface{}) error {
 	p.Lock()
 	defer p.Unlock()
 	if !p.connected {
-		return
+		return nil
 	}
 	if err := p.conn.WriteJSON(msg); err != nil {
 		log.Println("Player", p.id, "is disconnected")
+		return err
 	}
+	return nil
 }
 
 func (p *Player) Page(page string) {
