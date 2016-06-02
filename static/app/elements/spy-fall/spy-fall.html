@@ -90,15 +90,14 @@
 
           this.ws.onmessage = function (msg) {
             var json = JSON.parse(msg.data);
-            this.data = json;
             switch (json.type) {
-
               case "page":
                 page(json.page);
                 break;
 
               case "game":
                 page('/game/' + json.game.gameId);
+                this.data = json;
                 break;
 
               case "say":

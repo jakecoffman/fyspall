@@ -15,6 +15,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
 <link rel="import" href="../../bower_components/iron-icons/av-icons.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="../count-down/count-down.html">
 
 <dom-module id="my-game">
@@ -25,21 +26,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
 
       #actions {
-        display: flex;
-        justify-content: space-between;
+        @apply(--layout-justified)
       }
 
       paper-fab {
         position: fixed;
         bottom: 32px;
         right: 32px;
-      }
-
-      paper-material {
-        background-color: white;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
       }
 
       .kick {
@@ -52,6 +45,35 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       .danger {
         color: red;
+      }
+
+      #players {
+        @apply(--layout-horizontal);
+        @apply(--layout-wrap);
+      }
+
+      #locations {
+        @apply(--layout-horizontal);
+        @apply(--layout-wrap);
+        @apply(--layout-justified);
+      }
+
+      paper-card {
+        max-width: 185px;
+      }
+
+      .card {
+        box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+        padding: 16px;
+        margin: 24px;
+        border-radius: 5px;
+        background-color: #fff;
+        color: #757575;
+      }
+
+      paper-card {
+        --primary-background-color: white;
+        margin-bottom: 8px;
       }
     </style>
 
@@ -81,8 +103,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </div>
 
     <h2>Players</h2>
-      <template is="dom-repeat" items="{{_toArray(data.game.players)}}">
-        <paper-material>
+      <template is="dom-repeat" items="{{_toArray(data.game.players)}}" id="players">
+        <paper-card>
+          <div class="card-content">
           <span>
             <span hidden$="{{!item.value.connected}}"><iron-icon class="ok" icon="check-circle"></iron-icon></span>
             <span hidden$="{{item.value.connected}}"><iron-icon class="danger" icon="warning"></iron-icon></span>
@@ -90,17 +113,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <span>
             <span>{{item.value.name}}</span>
             <iron-icon icon="star" hidden$="{{!eq(item.key, data.game.first)}}"></iron-icon>
+            <paper-icon-button hidden$="{{!eq(data.you.player.id, data.game.creator)}}" class="kick" icon="delete" on-tap="kick" data-player$="{{item.key}}"></paper-icon-button>
           </span>
-          <paper-icon-button class="kick" icon="delete" on-tap="kick" data-player$="{{item.key}}" disabled$="{{!eq(data.you.player.id, data.game.creator)}}"></paper-icon-button>
-        </paper-material>
+          </div>
+        </paper-card>
       </template>
 
     <h2>Possible Locations</h2>
-    <ul>
-    <template is="dom-repeat" items="{{data.info.Locations}}">
-      <li>{{item}}</li>
+    <template is="dom-repeat" items="{{data.places.Locations}}" id="locations">
+      <paper-card image$="{{_locImg(item)}}">
+        <div class="card-content">
+          {{item}}
+        </div>
+      </paper-card>
     </template>
-    </ul>
 
     <div id="actions">
       <paper-fab on-tap="endGame" title="End" icon="av:stop" hidden="{{!data.game.started}}" disabled$="{{!eq(data.you.player.id, data.game.creator)}}">
@@ -149,6 +175,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               action: 'rejoin'
             }));
           }
+        },
+        _locImg: function(location) {
+          return '/images/locations/' + location.toLowerCase().replace(/ /g, '_') + '.jpg';
         },
         _dataChanged: function(newVal, old) {
           console.log(this.data);

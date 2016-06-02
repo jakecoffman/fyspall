@@ -225,7 +225,7 @@
     "Customer"
   ],
   "Theater": [
-    "Coat Check Lady",
+    "Coat Checker",
     "Prompter",
     "Cashier",
     "Director",
@@ -238,7 +238,7 @@
     "Professor",
     "Dean",
     "Psychologist",
-    "Maintenance Man",
+    "IT Helpdesk Employee",
     "Janitor",
     "Student"
   ],
@@ -248,7 +248,7 @@
     "Scout",
     "Medic",
     "Cook",
-    "Imprisoned Nazi",
+    "Prisoner",
     "Soldier"
   ]
 }
