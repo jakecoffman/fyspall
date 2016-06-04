@@ -11,6 +11,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/iron-a11y-keys/iron-a11y-keys.html">
 
 <dom-module id="name-input">
   <template>
@@ -25,8 +26,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     </style>
 
-    <paper-input id="name-input" value="{{name::input}}" label="Enter your name"></paper-input>
-    <paper-button raised on-tap="_start">Start</paper-button>
+    <iron-a11y-keys target="[[_target]]" keys="enter" on-keys-pressed="_start"></iron-a11y-keys>
+    <paper-input
+      id="name-input"
+      value="{{name::input}}"
+      label="Enter your name"
+      on-keydown="checkForEnter">
+    </paper-input>
+    <paper-button raised on-tap="_start">
+      Start
+    </paper-button>
 
     <content></content>
   </template>
@@ -47,7 +56,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             type: Object
           }
         },
+        ready: function() {
+          this._target = this.$.input;
+        },
         _start: function() {
+          if (this.name === '') {
+            return;
+          }
           this.ws.send(JSON.stringify({
             action: 'new',
             name: this.name

@@ -9,7 +9,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
 
 <dom-module id="my-greeting">
   <template>
@@ -19,8 +21,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
 
       #choices {
-        display: flex;
-        justify-content: space-between;
+        @apply(--layout-horizontal);
+        @apply(--layout-around-justified);
+      }
+
+      a {
+        text-decoration: none;
       }
     </style>
 

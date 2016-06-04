@@ -11,6 +11,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/iron-a11y-keys/iron-a11y-keys.html">
 
 <dom-module id="game-input">
   <template>
@@ -25,6 +26,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     </style>
 
+    <iron-a11y-keys target="[[_target]]" keys="enter" on-keys-pressed="_start"></iron-a11y-keys>
     <paper-input id="name-input" value="{{name}}" label="Enter your name"></paper-input>
     <paper-input id="game-input" value="{{gameId}}" label="Enter game ID" type="number"></paper-input>
     <paper-button raised on-tap="_start">Join</paper-button>
@@ -53,6 +55,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           }
         },
         _start: function() {
+          if (this.name === '' || this.gameId === '') {
+            return;
+          }
+
           this.ws.send(JSON.stringify({
             action: 'join',
             name: this.name,

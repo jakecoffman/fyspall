@@ -25,8 +25,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         display: block;
       }
 
-      #actions {
-        @apply(--layout-justified)
+      .group {
+        @apply(--layout-horizontal);
+        @apply(--layout-wrap);
+        @apply(--layout-around-justified);
       }
 
       paper-fab {
@@ -47,28 +49,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         color: red;
       }
 
-      #players {
-        @apply(--layout-horizontal);
-        @apply(--layout-wrap);
-      }
-
-      #locations {
-        @apply(--layout-horizontal);
-        @apply(--layout-wrap);
-        @apply(--layout-justified);
-      }
-
       paper-card {
         max-width: 185px;
-      }
-
-      .card {
-        box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
-        padding: 16px;
-        margin: 24px;
-        border-radius: 5px;
-        background-color: #fff;
-        color: #757575;
       }
 
       paper-card {
@@ -76,6 +58,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         margin-bottom: 8px;
       }
     </style>
+
+    <h1 class="page-title" tabindex="-1">Game: {{data.game.gameId}}</h1>
 
     <div hidden="{{!data.game.started}}">
       <count-down deadline="{{data.game.deadline}}"></count-down>
@@ -103,7 +87,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </div>
 
     <h2>Players</h2>
-      <template is="dom-repeat" items="{{_toArray(data.game.players)}}" id="players">
+    <div class="group">
+      <template is="dom-repeat" items="{{_toArray(data.game.players)}}">
         <paper-card>
           <div class="card-content">
           <span>
@@ -118,22 +103,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           </div>
         </paper-card>
       </template>
+    </div>
 
     <h2>Possible Locations</h2>
-    <template is="dom-repeat" items="{{data.places.Locations}}" id="locations">
-      <paper-card image$="{{_locImg(item)}}">
-        <div class="card-content">
-          {{item}}
-        </div>
-      </paper-card>
-    </template>
-
-    <div id="actions">
-      <paper-fab on-tap="endGame" title="End" icon="av:stop" hidden="{{!data.game.started}}" disabled$="{{!eq(data.you.player.id, data.game.creator)}}">
-      </paper-fab>
-      <paper-fab on-tap="startGame" title="Start" icon="av:play-arrow" hidden="{{data.game.started}}" disabled$="{{!eq(data.you.player.id, data.game.creator)}}">
-      </paper-fab>
+    <div class="group">
+      <template is="dom-repeat" items="{{data.places.Locations}}">
+        <paper-card image$="{{_locImg(item)}}">
+          <div class="card-content">
+            {{item}}
+          </div>
+        </paper-card>
+      </template>
     </div>
+
+    <paper-fab on-tap="endGame" title="End" icon="av:stop" hidden="{{!data.game.started}}" disabled$="{{!eq(data.you.player.id, data.game.creator)}}">
+    </paper-fab>
+    <paper-fab on-tap="startGame" title="Start" icon="av:play-arrow" hidden="{{data.game.started}}" disabled$="{{!eq(data.you.player.id, data.game.creator)}}">
+    </paper-fab>
 
     <content></content>
   </template>
@@ -152,9 +138,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             observer: '_dataChanged'
           },
           name: {
-            type: String
-          },
-          gameId: {
             type: String
           },
           ws: {
