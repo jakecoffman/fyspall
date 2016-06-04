@@ -21561,6 +21561,7 @@ value. `setMax` should move the slider to the maximum value.
     <style include="shared-styles">
       :host {
         display: block;
+        margin: 8px;
       }
 
       .group {
@@ -21588,7 +21589,7 @@ value. `setMax` should move the slider to the maximum value.
       }
 
       paper-card {
-        max-width: 185px;
+        max-width: 169px;
       }
 
       paper-card {
@@ -21599,20 +21600,20 @@ value. `setMax` should move the slider to the maximum value.
 
     <h1 class="page-title" tabindex="-1">Game: {{data.game.gameId}}</h1>
 
-    <div hidden="{{!data.game.started}}">
+    <div hidden$="{{!data.game.started}}">
       <count-down deadline="{{data.game.deadline}}"></count-down>
 
       <h2>You</h2>
       <paper-checkbox name="hide" id="hide" on-click="hideSpyness">Hide</paper-checkbox>
       <div hidden$="{{hide}}">
-        <div hidden="{{!data.you.isSpy}}">
+        <div hidden$="{{!data.you.isSpy}}">
           <p>You are the spy!</p>
           <p>
             Try to figure out where everyone else is. If you
             guess it before you are found out, you win!
           </p>
         </div>
-        <div hidden="{{data.you.isSpy}}">
+        <div hidden$="{{data.you.isSpy}}">
           <p>Location: <em>{{data.you.location}}</em></p>
           <p>Role: <em>{{data.you.role}}</em></p>
           <p>
