@@ -58,6 +58,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         --primary-background-color: white;
         margin-bottom: 8px;
       }
+
+      .player {
+        @apply(--layout-horizontal);
+        @apply(--layout-justified);
+        @apply(--layout-center);
+      }
     </style>
 
     <h1 class="page-title" tabindex="-1">Game: {{data.game.gameId}}</h1>
@@ -91,7 +97,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <div class="group">
       <template is="dom-repeat" items="{{_toArray(data.game.players)}}">
         <paper-card>
-          <div class="card-content">
+          <div class="card-content player">
           <span>
             <span hidden$="{{!item.value.connected}}"><iron-icon class="ok" icon="check-circle"></iron-icon></span>
             <span hidden$="{{item.value.connected}}"><iron-icon class="danger" icon="warning"></iron-icon></span>
